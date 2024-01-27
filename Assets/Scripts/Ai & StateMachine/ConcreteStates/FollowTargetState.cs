@@ -26,7 +26,7 @@ public class FollowTargetState : State //L2
     {
         base.Update();
         //Base behavior of this state: Lock on to target
-        ai.TrackTarget();
+        ai.TrackingTarget();
 
 
         if (ai.IsL3() == true)
@@ -36,6 +36,10 @@ public class FollowTargetState : State //L2
         if (ai.IsL2() != true && ai.IsL3() != true)
         {
             ai.StateMachine.ChangeState(ai.SearchTargetState);
+        }
+        else if (ai.IsIdle() == true)
+        {
+            ai.StateMachine.ChangeState(ai.IdleState);
         }
 
         //Switch back if lose target

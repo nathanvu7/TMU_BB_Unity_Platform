@@ -10,6 +10,8 @@ public class AI : MonoBehaviour
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private float AImoveSpeed;
     [SerializeField] private float AImoveSpeedSlow;
+    [SerializeField] private float AIinvestigateSpeed;
+    [SerializeField] private float AImoveSpeedCenter;
     [SerializeField] private float turningSpeed; //7 //Also uysed for tracking
     [SerializeField] private float slowTrackSpeed;
     //[SerializeField] float AIturnSpeed;
@@ -29,8 +31,11 @@ public class AI : MonoBehaviour
     float lockOnSpeed;
     float lockOnSpeedSlow;
 
+    bool idleBool = false;
+    private Transform meeple;
+
     //LockOnCircle
-    [SerializeField] private GameObject lockOnCircle;
+    [SerializeField] private GameObject marker;
     [SerializeField] private GameObject notLockOn;
 
     //CenterTarget
@@ -60,22 +65,26 @@ public class AI : MonoBehaviour
     public FollowTargetState FollowTargetState { get; private set; }
     public OffensiveState OffensiveState { get; private set; }
     public RamAttkState RamAttkState { get; private set; }
+    public IdleState IdleState { get; private set; }
 
     void Awake()
     {
         
         StateMachine = new StateMachine();
         //Create instance of new State classes
+        IdleState = new IdleState(this, StateMachine);
         SearchTargetState = new SearchTargetState(this, StateMachine);
         FollowTargetState = new FollowTargetState(this, StateMachine);  
         OffensiveState = new OffensiveState(this, StateMachine);    
         RamAttkState = new RamAttkState(this, StateMachine);    
+
     }
 
     private void OnEnable()
     {
         //returns to starting position
         this.transform.position = startPosition.transform.position;
+        marker.SetActive(false);
     }
 
     private void Start()
@@ -85,13 +94,10 @@ public class AI : MonoBehaviour
        
     }
 
-
-
     private void Update()
     {
 
         StateMachine.CurrentEnemyState.Update(); //IMPORTANT
-        //state = visionCone.GetCone(); //Reads from VisionCone script, updates state to check IsL1, L2, L3, L4
         GetConeInt();
 
         
@@ -150,9 +156,21 @@ public class AI : MonoBehaviour
     public bool IsL3()
     {
         int l3 = GetConeInt();
-        if (l3 >= 8 && l3 <= 9) //any of L3 sensors triggered
+        if (l3 >= 8 && l3 <= 9) //any of L3+ sensors triggered
         {
             //Debug.Log("Isl3");
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    public bool IsL4()
+    {
+        int l4 = GetConeInt();
+        if (l4 == 9) //L4 sensors triggered
+        {
             return true;
         }
         else
@@ -175,23 +193,34 @@ public class AI : MonoBehaviour
         }
     }
 
-    //Generic track target
-    public void TrackTarget()
+    public bool IsIdle()
     {
-        Vector3 vectorToTarget = targetObj.transform.position - transform.position;
-        float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg - 90;
-        q = Quaternion.AngleAxis(angle, Vector3.forward);
-        transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * turningSpeed);
-
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            idleBool = !idleBool;
+            return idleBool;
+        }
+        return idleBool;
     }
 
-    public void TrackTargetSlowly()
+    //Generic track target
+    public void TrackTarget(float trackingSpeed)
     {
         Vector3 vectorToTarget = targetObj.transform.position - transform.position;
         float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg - 90;
         q = Quaternion.AngleAxis(angle, Vector3.forward);
-        transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * slowTrackSpeed);
+        transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * trackingSpeed);
+    }
 
+    //Different Tracking speeds;
+    public void TrackingTarget()
+    {
+        TrackTarget(turningSpeed);
+    }
+
+    public void TrackingTargetSlowly()
+    {
+        TrackTarget(slowTrackSpeed);
     }
     //Generic move forward function that  inputs a direction
     public void MoveForward()
@@ -216,23 +245,105 @@ public class AI : MonoBehaviour
     //moving around
     public void MoveToCenter()
     {
-        timer = 0f;
-        if (timer < 1)
+        timer = 0f; 
+        if (timer < 3)
         {
             
             timer += Time.deltaTime;
-            Vector3 vectorToTarget = centerObj.transform.position - transform.position;
-            float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg - 90;
-            q = Quaternion.AngleAxis(angle, Vector3.forward);
-            transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * L1turnSpeed);
+            TrackTarget(L1turnSpeed);
         }
         
         float distance = Vector2.Distance(centerObj.transform.position, this.transform.position);
         if (distance >= 2f)
         {
-            rb.AddForce(transform.up * 40, ForceMode2D.Impulse);
+            rb.AddForce(transform.up * AImoveSpeedCenter, ForceMode2D.Impulse);
         }
     }
+    /*place where the marker is to investigate.
+    but we don't want to constantly update where this marker is
+    Only update when the marker is reached, or L2 is triggered (state changes)
+    (hopefully L2 quits
+    */
+    public void PlaceMarker() 
+    {
+        if (marker.activeSelf == false) //can only place marker when marketSet is false. market is false only when reached marker
+        {
+            marker.SetActive(true);
+            int i = GetConeInt();
+            switch (i)
+            {
+                case 0: //front
+                    meeple = this.gameObject.transform.GetChild(0);
+                    marker.transform.position = meeple.transform.position;
+                   
+                    marker.SetActive(true);
+                    break;
+                case 1: //left
+                    meeple = this.gameObject.transform.GetChild(1);
+                    marker.transform.position = meeple.transform.position;
+
+                    marker.SetActive(true);
+                    break;
+                case 2: //back
+                    meeple = this.gameObject.transform.GetChild(2);
+                    marker.transform.position = meeple.transform.position;
+
+                    marker.SetActive(true);
+                    break;
+                case 3: //right
+                    meeple = this.gameObject.transform.GetChild(3);
+                    marker.transform.position = meeple.transform.position;
+
+                    marker.SetActive(true);
+                    break;
+
+            }
+        }      
+    }
+    public void SetMarker(bool b)
+    {
+        marker.SetActive (b);
+    }
+    public bool GetMarker()
+    {
+        return marker.activeSelf;   
+    }
+
+    IEnumerator Countdown(float f)
+    {
+
+        yield return new WaitForSeconds(f);
+        marker.SetActive(false);
+    }
+
+    public void InvestigateMarker()
+    {
+ 
+            timer = 0f;
+            if (timer < 1)
+            {
+
+                timer += Time.deltaTime;
+                Vector3 vectorToTarget = marker.transform.position - transform.position;
+                float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg - 90;
+                q = Quaternion.AngleAxis(angle, Vector3.forward);
+                transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * L1turnSpeed);
+        }
+
+            float distance = Vector2.Distance(marker.transform.position, this.transform.position);
+            if (distance >= 5f)
+            {
+                rb.AddForce(transform.up * AIinvestigateSpeed, ForceMode2D.Impulse);
+        }
+        else if(distance < 5f) //when uve reached target
+        {
+            Debug.Log("reached");
+            marker.SetActive(false);
+        }
+        
+    }
+
+
 
     /// <summary>
     /// BEYOND LIES DOG SHIT
@@ -264,15 +375,15 @@ public class AI : MonoBehaviour
         yield return new WaitForSeconds(countdownTime);
 
 
-        TrackTarget();
+        TrackingTarget();
         // Code to execute after the countdown
         //SetLock(true);
         //DrawTarget();
     }
 
-    public void SetLock(bool b)
+    public void SetLock(bool idleBool)
     {
-        targetLocked = b;
+        targetLocked = idleBool;
     }
 
     public bool GetLock()
@@ -284,11 +395,11 @@ public class AI : MonoBehaviour
     {
         if (targetLocked == true)
         {
-            lockOnCircle.transform.position = targetObj.transform.position;
+            marker.transform.position = targetObj.transform.position;
         }
         else
         {
-            lockOnCircle.transform.position = notLockOn.transform.position;
+            marker.transform.position = notLockOn.transform.position;
         }
         
     }

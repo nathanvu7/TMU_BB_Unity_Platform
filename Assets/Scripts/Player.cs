@@ -12,6 +12,8 @@ public class Player : MonoBehaviour
 
     [SerializeField] Rigidbody2D rb;
     [SerializeField] float movementSpeed;
+    [SerializeField] float boostSpeed;
+    float currentSpeed;
     [SerializeField] float turnSpeed;
 
     [SerializeField] Vector2 inputVector;
@@ -29,7 +31,8 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update c
     void Start()
     {
-       // rb = new Rigidbody2D();
+        // rb = new Rigidbody2D();
+        currentSpeed = movementSpeed;
     }
 
     // Update is called once per frame
@@ -48,12 +51,13 @@ public class Player : MonoBehaviour
     {
         AccelSystem();
         SteerSystem();
+        Boost();
     }
 
     void AccelSystem()
     {
         //transform.up = fwd //accel and steer inputs is 0/1 boolean dictating when a force is applied
-        Vector2 engineForceVector = transform.up * accelInputs * movementSpeed;
+        Vector2 engineForceVector = transform.up * accelInputs * currentSpeed;
         rb.AddForce(engineForceVector, ForceMode2D.Impulse);
 
 
@@ -73,11 +77,23 @@ public class Player : MonoBehaviour
 
     void OnorOff()
     {
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.B))
         {
             toggleEnemy = !toggleEnemy;
             enemy.SetActive(toggleEnemy);
 
+        }
+    }
+
+    void Boost()
+    {
+        if(Input.GetKey(KeyCode.LeftShift))
+        {
+            currentSpeed = boostSpeed;
+        }
+        else
+        {
+            currentSpeed = movementSpeed; 
         }
     }
 

@@ -9,7 +9,7 @@ public class SearchTargetState : State //Inhrerit from State class, which itself
     //Bool used to check between two substates 
     //they may work better as a seperate state but too late!!
     private bool goCenter;
-    private bool investigateFront;
+    private bool investigateMarker;
 
     
 
@@ -18,6 +18,7 @@ public class SearchTargetState : State //Inhrerit from State class, which itself
         //Investigation state where bot will move straight towards detected L1 sensors in order to find Target
         //If L2 triggered, switch to FollowTargetState
         //else, stay here
+        //Can also move to centre of Arena
     }
 
     public override void EnterState()
@@ -37,23 +38,26 @@ public class SearchTargetState : State //Inhrerit from State class, which itself
     public override void Update()
     {
         base.Update();
-        //Base behavior of this state: for now is to be in the middle of the room and look
-        //if the bot is currently investigating a quadrant, dont engage L1 checks for now
-        //if not itll bounce back n forth
-        //not sure if this is the best way to do it
+        /*Base function
+         * Drops a marker in that cone and moves towards it
+         * only exits this move function when reach cone or target within L2s.
+        */
             if (ai.IsL1() == true)
             {
                 goCenter = false;
-                ai.TrackTargetSlowly();
-                investigateFront = true;
+                ai.PlaceMarker();
+               // investigateL1 = true;
+                investigateMarker = true;
 
-            }
-
-        
-        else if (ai.IsL1() == false) //outside of L1
+            }       
+        else //outside of L1, move to center of arena to achieve full vision of arena
         {
-            goCenter = true;
-            investigateFront = false;
+            if (ai.GetMarker() == false) //makes sure the bot isnt already investigating before going to center.
+            {
+                goCenter = true;
+                investigateMarker = false;
+            }
+           
         }
 
 
@@ -62,7 +66,12 @@ public class SearchTargetState : State //Inhrerit from State class, which itself
         //Switch state to FollowTargetState
         if (ai.IsL2() == true)
         {
+            ai.SetMarker(false); //Make sure there are no markers left when it leaves this state
             ai.StateMachine.ChangeState(ai.FollowTargetState);
+        }
+        else if (ai.IsIdle() == true)
+        {
+            ai.StateMachine.ChangeState(ai.IdleState);
         }
     }
 
@@ -73,9 +82,9 @@ public class SearchTargetState : State //Inhrerit from State class, which itself
         {
             ai.MoveToCenter();
         }
-        if (investigateFront == true) //find a way to decouple bool check in updates and movement in physics update. Another bool?
+        if (investigateMarker == true)
         {
-            ai.MoveSlowly();
+            ai.InvestigateMarker();
         }
 
 

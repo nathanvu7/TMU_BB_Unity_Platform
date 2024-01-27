@@ -12,7 +12,7 @@ public class State // the Car class for each Bus, Sedan, Bike
     //Constructor
     public State(AI ai, StateMachine stateMachine)
     {
-        Debug.Log("beep");
+        //Debug.Log("beep");
         this.stateMachine = stateMachine;
         this.ai = ai;
         

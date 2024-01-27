@@ -24,7 +24,7 @@ public class RamAttkState : State //THIS IS NOT USED THERES A BUG FOR NOW???
     {
         base.Update();
         //Base behavior of this state: Still locked on to target
-        ai.TrackTarget();
+        ai.TrackingTarget();
         ai.MoveForward();
 
         
