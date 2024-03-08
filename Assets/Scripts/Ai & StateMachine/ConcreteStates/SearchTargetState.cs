@@ -35,6 +35,8 @@ public class SearchTargetState : State //Inhrerit from State class, which itself
         Debug.Log("Exit SearchTargetState");
     }
 
+
+    
     public override void Update()
     {
         base.Update();

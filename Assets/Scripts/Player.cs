@@ -1,22 +1,25 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.InputSystem;
+using static UnityEngine.InputSystem.PlayerInput;
 
 
 public class Player : MonoBehaviour
 {
 
-
+    //Physics Stats
     [SerializeField] Rigidbody2D rb;
     [SerializeField] float movementSpeed;
     [SerializeField] float boostSpeed;
     float currentSpeed;
     [SerializeField] float turnSpeed;
 
+    //Controls
     [SerializeField] Vector2 inputVector;
+    float isBoosting;
+
+    //New Control System
+    private PlayerInputs input = null;
+    
 
     //Enemy Bot
     bool toggleEnemy = true;
@@ -28,24 +31,37 @@ public class Player : MonoBehaviour
     float steerInputs = 0;
     float rotationAngle = 0;
 
-    // Start is called before the first frame update c
+    //for multiplayer
+    [SerializeField] int index;
+
     void Start()
-    {
-        // rb = new Rigidbody2D();
+    {   
         currentSpeed = movementSpeed;
+        
+    }
+
+
+    private void OnEnable()
+    {
+        input = new PlayerInputs();
+        input.Enable();
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        inputVector.x = Input.GetAxisRaw("Horizontal");
-        inputVector.y = Input.GetAxisRaw("Vertical");
+        //old input system - can't find any documnetations for coop somehow so im switching to newer system
+        //inputVector.x = Input.GetAxisRaw("Horizontal");
+        //inputVector.y = Input.GetAxisRaw("Vertical");
+        //isBoosting = Input.GetAxisRaw("Fire1");
+        inputVector = input.Player.Move.ReadValue<Vector2>();
+        isBoosting = input.Player.Boost.ReadValue<float>();
         SetInputs(inputVector);
-        OnorOff();
-
         QuitGame();
-
     }
+
+   
 
     void FixedUpdate()
     {
@@ -54,14 +70,16 @@ public class Player : MonoBehaviour
         Boost();
     }
 
+    public int GetPlayerIndex()
+    {
+        return index;
+    }
+
     void AccelSystem()
     {
         //transform.up = fwd //accel and steer inputs is 0/1 boolean dictating when a force is applied
         Vector2 engineForceVector = transform.up * accelInputs * currentSpeed;
         rb.AddForce(engineForceVector, ForceMode2D.Impulse);
-
-
-        
     }
     void SteerSystem()
     {
@@ -87,7 +105,7 @@ public class Player : MonoBehaviour
 
     void Boost()
     {
-        if(Input.GetKey(KeyCode.LeftShift))
+        if (isBoosting == 1)
         {
             currentSpeed = boostSpeed;
         }
