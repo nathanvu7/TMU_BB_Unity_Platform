@@ -244,27 +244,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: be0575c302ef4874282653f93d1955ab, type: 3}
---- !u!58 &437911979 stripped
-CircleCollider2D:
-  m_CorrespondingSourceObject: {fileID: 771803010573777336, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
-  m_PrefabInstance: {fileID: 659996306}
-  m_PrefabAsset: {fileID: 0}
 --- !u!50 &437911981 stripped
 Rigidbody2D:
   m_CorrespondingSourceObject: {fileID: 9061246211771667263, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
   m_PrefabInstance: {fileID: 659996306}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &437911985 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7733285946557559673, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
-  m_PrefabInstance: {fileID: 659996306}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4e9019063c2d2949a23e35f3fd77626, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &484404113
 GameObject:
   m_ObjectHideFlags: 0
@@ -338,22 +322,6 @@ Rigidbody2D:
   m_CorrespondingSourceObject: {fileID: 9061246211771667263, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
   m_PrefabInstance: {fileID: 896883430}
   m_PrefabAsset: {fileID: 0}
---- !u!58 &567781760 stripped
-CircleCollider2D:
-  m_CorrespondingSourceObject: {fileID: 771803010573777336, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
-  m_PrefabInstance: {fileID: 896883430}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &567781765 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7733285946557559673, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
-  m_PrefabInstance: {fileID: 896883430}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4e9019063c2d2949a23e35f3fd77626, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &620751893
 GameObject:
   m_ObjectHideFlags: 0
@@ -476,11 +444,11 @@ PrefabInstance:
     - target: {fileID: 347516794541282167, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: enemyBot
       value: 
-      objectReference: {fileID: 567781765}
+      objectReference: {fileID: 0}
     - target: {fileID: 347516794541282167, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: enemyCol
       value: 
-      objectReference: {fileID: 567781760}
+      objectReference: {fileID: 0}
     - target: {fileID: 347516794541282167, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: knockbackForce
       value: 40000
@@ -496,7 +464,7 @@ PrefabInstance:
     - target: {fileID: 1039344607759751941, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: combatSystem
       value: 
-      objectReference: {fileID: 437911985}
+      objectReference: {fileID: 0}
     - target: {fileID: 4559992619038890004, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: m_Color.b
       value: 0.5707547
@@ -737,11 +705,11 @@ PrefabInstance:
     - target: {fileID: 347516794541282167, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: enemyBot
       value: 
-      objectReference: {fileID: 437911985}
+      objectReference: {fileID: 0}
     - target: {fileID: 347516794541282167, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: enemyCol
       value: 
-      objectReference: {fileID: 437911979}
+      objectReference: {fileID: 0}
     - target: {fileID: 5199790694617103064, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -6.55
