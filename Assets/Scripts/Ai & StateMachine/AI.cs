@@ -1,9 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 //using UnityEditor.Tilemaps;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 
+/*
+ * The core of the Enemy AI, where all components are connected
+ * 
+ */
 public class AI : MonoBehaviour
 {
     //Us/AI
@@ -32,7 +37,7 @@ public class AI : MonoBehaviour
     float lockOnSpeedSlow;
 
     bool idleBool = false;
-    private Transform meeple;
+    private Transform pingLocation;
 
     //LockOnCircle
     [SerializeField] private GameObject marker;
@@ -53,6 +58,13 @@ public class AI : MonoBehaviour
     VisionCone visionCone;
     int[] state;
 
+    //for Health and Damage system
+    [SerializeField] CombatSystem combatSystem;
+    [SerializeField] GameObject explosion;
+    bool aliveState = true;
+
+
+
     /*Variables for our state machine
     These are automatically implemented by C#, 
     Normally, this would be
@@ -66,7 +78,10 @@ public class AI : MonoBehaviour
     public OffensiveState OffensiveState { get; private set; }
     public RamAttkState RamAttkState { get; private set; }
     public IdleState IdleState { get; private set; }
-
+/*
+ * 
+ * 
+ */
     void Awake()
     {
         
@@ -99,8 +114,15 @@ public class AI : MonoBehaviour
 
         StateMachine.CurrentEnemyState.Update(); //IMPORTANT
         GetConeInt();
+        if (combatSystem.DeathCheck() == true)
+        {
+            aliveState = false;
+            Instantiate(explosion, this.transform);
+            enabled = false;
+            Debug.Log("die");
+        }
 
-        
+
     }
 
     // In the future seperate update and fixed update
@@ -115,6 +137,9 @@ public class AI : MonoBehaviour
 
     //yea its using a duplicate method in VisionCone
     //rmb to combine once done tinkering w Austin
+
+
+
     public int GetConeInt()
     {
         state = visionCone.GetCone();
@@ -137,7 +162,7 @@ public class AI : MonoBehaviour
     }
 
  
-
+    //some gnarly reuse of code below, but since the bot can trigger multiple L's, I cant think of any way to reduce it... then again im kinda ass
     public bool IsL1()
     {
         int l1 = GetConeInt();
@@ -192,7 +217,10 @@ public class AI : MonoBehaviour
             return false;
         }
     }
-
+    /*Used by other states to jump to idle state
+     * If statement works as a toggle.
+     * 
+     */
     public bool IsIdle()
     {
         if (Input.GetKeyDown(KeyCode.C))
@@ -259,40 +287,42 @@ public class AI : MonoBehaviour
             rb.AddForce(transform.up * AImoveSpeedCenter, ForceMode2D.Impulse);
         }
     }
-    /*place where the marker is to investigate.
+
+
+    /*place where the marker is to investigate in relation to where our bot is.
     but we don't want to constantly update where this marker is
-    Only update when the marker is reached, or L2 is triggered (state changes)
+    So, update when the marker is reached, or L2 is triggered (state changes)
     (hopefully L2 quits
     */
     public void PlaceMarker() 
     {
-        if (marker.activeSelf == false) //can only place marker when marketSet is false. market is false only when reached marker
+        if (marker.activeSelf == false) //can only place marker when marketSet is false. marker is false only when reached marker
         {
             marker.SetActive(true);
             int i = GetConeInt();
             switch (i)
             {
                 case 0: //front
-                    meeple = this.gameObject.transform.GetChild(0);
-                    marker.transform.position = meeple.transform.position;
+                    pingLocation = this.gameObject.transform.GetChild(0);
+                    marker.transform.position = pingLocation.transform.position;
                    
                     marker.SetActive(true);
                     break;
                 case 1: //left
-                    meeple = this.gameObject.transform.GetChild(1);
-                    marker.transform.position = meeple.transform.position;
+                    pingLocation = this.gameObject.transform.GetChild(1);
+                    marker.transform.position = pingLocation.transform.position;
 
                     marker.SetActive(true);
                     break;
                 case 2: //back
-                    meeple = this.gameObject.transform.GetChild(2);
-                    marker.transform.position = meeple.transform.position;
+                    pingLocation = this.gameObject.transform.GetChild(2);
+                    marker.transform.position = pingLocation.transform.position;
 
                     marker.SetActive(true);
                     break;
                 case 3: //right
-                    meeple = this.gameObject.transform.GetChild(3);
-                    marker.transform.position = meeple.transform.position;
+                    pingLocation = this.gameObject.transform.GetChild(3);
+                    marker.transform.position = pingLocation.transform.position;
 
                     marker.SetActive(true);
                     break;
@@ -300,6 +330,9 @@ public class AI : MonoBehaviour
             }
         }      
     }
+
+    //Generic Getter Setters for Marker state.
+    //Toggles the gameObject Marker state when SearchTargetState jumps to Other
     public void SetMarker(bool b)
     {
         marker.SetActive (b);
@@ -309,13 +342,9 @@ public class AI : MonoBehaviour
         return marker.activeSelf;   
     }
 
-    IEnumerator Countdown(float f)
-    {
-
-        yield return new WaitForSeconds(f);
-        marker.SetActive(false);
-    }
-
+    /*Uses a short x to give bot some turning time.
+     * 
+     */
     public void InvestigateMarker()
     {
  
@@ -328,7 +357,7 @@ public class AI : MonoBehaviour
                 float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg - 90;
                 q = Quaternion.AngleAxis(angle, Vector3.forward);
                 transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * L1turnSpeed);
-        }
+            }
 
             float distance = Vector2.Distance(marker.transform.position, this.transform.position);
             if (distance >= 5f)
@@ -337,7 +366,7 @@ public class AI : MonoBehaviour
         }
         else if(distance < 5f) //when uve reached target
         {
-            Debug.Log("reached");
+            //Debug.Log("reached");
             marker.SetActive(false);
         }
         
@@ -412,10 +441,10 @@ public class AI : MonoBehaviour
     /// <param name="obj"></param>
     public void MoveTo(GameObject obj)
     {
-        timer = 0f;
-        if (timer < 5)
+        x = 0f;
+        if (x < 5)
         {
-            timer += Time.deltaTime;
+            x += Time.deltaTime;
             Turning(obj);
             rb.AddForce(transform.up * 40, ForceMode2D.Impulse);
         }
