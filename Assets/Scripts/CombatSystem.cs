@@ -70,7 +70,7 @@ public class CombatSystem : MonoBehaviour
             if (x <= xUpperBound)
             {
                 amplitude = Pow(2.5, 0.31 * x);
-                attackPower = -amplitude * Cos(2 * PI * x) + Exp(0.4 * x);
+                attackPower = -amplitude * Cos(3 * PI * x) + Exp(0.4 * x);
                 /*composite equation of the exponentially increasing dmg     
                  * Sinusoidal is a fun way to give some randomness (that can be mastered if timing attacks correctly)
                  * Sinusoidal also emulates a spinner's bite colliding with the enemy bot at different intervals
@@ -79,7 +79,7 @@ public class CombatSystem : MonoBehaviour
             }
             else
             {
-                attackPower = -5.5 * Cos(2 * PI * x) + 31;
+                attackPower = -5.5 * Cos(3 * PI * x) + 31;
                 //switches to a straight sine wave after some time so the damage number doesnt increase forever
                 //still goes up and down lol
             }

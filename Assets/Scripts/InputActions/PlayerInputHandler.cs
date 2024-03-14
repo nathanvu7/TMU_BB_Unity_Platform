@@ -22,6 +22,13 @@ public class PlayerInputHandler : MonoBehaviour
       whenever we press buttons on a controller, the PlayerInputManager will instantiate a Player Input Prefab (the empty object w/ PlayerInput and this script attached)
       On instantiation, this input handler script will find and attach to each Player Object (the actual bots with physics)m depending on their index.
      */
+
+    /*okay how this currently works:
+     * In the scene, there are 3 PLayerInput objects w this script that corresponds to the 1 keyboard, and 2 Controllers
+     * If you wanna use controllers v controllers, have index be 1 and 2 for the Player bots.
+     * cuz index 0 is being mapped to keyboard
+     * this is fucked i know.
+     * */
     
     void Start()
     {

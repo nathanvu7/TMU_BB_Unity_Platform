@@ -17,6 +17,8 @@ public class PlayerHitBox : MonoBehaviour
     [SerializeField] float knockbackForce;
     Vector2 direction;
 
+    int damage;
+
     void Start()
     {
         playerBot = GetComponentInParent<CombatSystem>();
@@ -24,7 +26,8 @@ public class PlayerHitBox : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-
+        damage = playerBot.GetDamage(); //gets damage from our bot and dishes it to enemys hp.
+        SetKnockBacks(damage);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -34,8 +37,7 @@ public class PlayerHitBox : MonoBehaviour
         if (collision.gameObject.tag == "Player")
         {
             Explosion();
-            int damage = playerBot.GetDamage(); //gets damage from our bot and dishes it to enemys hp.
-            SetKnockBacks(damage);
+            
             enemyBot.DealDamage(damage);
             playerBot.DecrementDamage();
         }

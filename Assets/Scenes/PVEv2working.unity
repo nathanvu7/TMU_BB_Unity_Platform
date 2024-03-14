@@ -5404,7 +5404,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 347516794541282167, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: force
-      value: 50000
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 347516794541282167, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: enemyrb
@@ -5420,7 +5420,7 @@ PrefabInstance:
       objectReference: {fileID: 708541294}
     - target: {fileID: 347516794541282167, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: knockbackForce
-      value: 30000
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1039344607759751941, guid: 795ac8f49dbdf5142913ce7a6fd89d0a, type: 3}
       propertyPath: enemy

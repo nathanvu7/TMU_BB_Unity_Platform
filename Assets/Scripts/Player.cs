@@ -28,7 +28,9 @@ public class Player : MonoBehaviour
     float rotationAngle = 0;
 
     //for multiplayer
-    [SerializeField] int index = 0;
+    [SerializeField] int index = 0; //unique id for each bot, 0 = p1, 1 = p2, 2 = AI
+    private GameObject organizerObj;
+    private GameOrganizer organizer;
 
     //for Health and Damage system
     [SerializeField] CombatSystem combatSystem;
@@ -38,6 +40,10 @@ public class Player : MonoBehaviour
     void Start()
     {   
         currentSpeed = movementSpeed;
+        organizerObj = GameObject.FindWithTag("Organizer");
+        organizer = organizerObj.GetComponent<GameOrganizer>();
+
+        organizer.UpdateScores();
     }
 
     // Update is called once per frame
@@ -49,7 +55,7 @@ public class Player : MonoBehaviour
             state = false;
             Instantiate(explosion, this.transform);
             enabled = false;
-            ThisBotLost(index);
+            organizer.PlayerLoses(index);
         }
     }
 
@@ -67,17 +73,7 @@ public class Player : MonoBehaviour
         return index;
     }
 
-    public void ThisBotLost(int id)
-    {
-        if (id == 0)
-        {
-            Debug.Log("player 2 wins!");
-        }
-        else if (id == 1)
-            {
-            Debug.Log("player 1 wins!");
-        }
-    }
+
     public void SetInputs(Vector2 inputVector)
     {
         inputVectors = inputVector; //passing it into a seperate vector so i can see in on inspection idk
