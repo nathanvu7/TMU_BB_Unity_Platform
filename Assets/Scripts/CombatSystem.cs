@@ -40,7 +40,7 @@ public class CombatSystem : MonoBehaviour
 
     }
 
-    public void FixedUpdate()
+    public void Update()
     {
         Attack();
         UpdateUI();
@@ -57,7 +57,8 @@ public class CombatSystem : MonoBehaviour
 
         if (currentHealth < 0)
         {
-            currentHealth = 0;
+            healthUI.SetHealth(0);
+            healthUI.DeathIcon();
             //Debug.Log("i am dead!!!!");
             isDead = true;           
             enabled = false;

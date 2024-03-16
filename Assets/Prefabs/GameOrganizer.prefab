@@ -47,3 +47,7 @@ MonoBehaviour:
   player1lives: 3
   player2lives: 3
   playerAIlives: 3
+  P1WINS: {fileID: 1677459869742459185, guid: 43f742af1b027a3449b3613bebf9ee95, type: 3}
+  P2WINS: {fileID: 7476097863974857590, guid: 1b1d3a8817eb5f342baab28f4b716da7, type: 3}
+  AIWINS: {fileID: 7071472237246528193, guid: 4033012bdb3e6a44f96d4d91e3f0cac4, type: 3}
+  PVP: 0

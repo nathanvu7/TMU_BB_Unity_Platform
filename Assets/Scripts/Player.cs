@@ -5,6 +5,7 @@ using static UnityEngine.InputSystem.PlayerInput;
 
 public class Player : MonoBehaviour
 {
+    //[SerializeField] Transform spawnPoint;
 
     //Physics Stats
     [SerializeField] Rigidbody2D rb;
@@ -38,12 +39,14 @@ public class Player : MonoBehaviour
     bool state = true;
 
     void Start()
-    {   
+    {
+        //this.transform.rotation = spawnPoint.rotation;
+
         currentSpeed = movementSpeed;
         organizerObj = GameObject.FindWithTag("Organizer");
         organizer = organizerObj.GetComponent<GameOrganizer>();
 
-        organizer.UpdateScores();
+        organizer.UpdateScores(); //idk how to make organizer call this when a scene restarts (not onEnable somehow) so this'll do.
     }
 
     // Update is called once per frame
@@ -52,6 +55,7 @@ public class Player : MonoBehaviour
         QuitGame();
         if (combatSystem.DeathCheck() == true) 
         {
+
             state = false;
             Instantiate(explosion, this.transform);
             enabled = false;
@@ -65,7 +69,11 @@ public class Player : MonoBehaviour
     {
         AccelSystem();
         SteerSystem();
-       
+        if (organizer.StopSignal() == true)
+        {
+            enabled = false;
+        }
+
     }
 
     public int GetPlayerIndex()

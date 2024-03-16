@@ -63,6 +63,10 @@ public class AI : MonoBehaviour
     [SerializeField] GameObject explosion;
     bool aliveState = true;
 
+    //Combat ("Multiplayer")
+    [SerializeField] int index = 0; //unique id for each bot, 0 = ai, 1 = p1, 2 = p2
+    private GameObject organizerObj;
+    private GameOrganizer organizer;
 
 
     /*Variables for our state machine
@@ -106,7 +110,12 @@ public class AI : MonoBehaviour
     {
         visionCone = this.GetComponent<VisionCone>();
         StateMachine.Initialize(SearchTargetState); //IMPORTANT
-       
+
+        organizerObj = GameObject.FindWithTag("Organizer");
+        organizer = organizerObj.GetComponent<GameOrganizer>();
+        organizer.UpdateScores(); //idk how to make organizer call this when a scene restarts (not onEnable somehow) so this'll do.
+
+
     }
 
     private void Update()
@@ -118,8 +127,10 @@ public class AI : MonoBehaviour
         {
             aliveState = false;
             Instantiate(explosion, this.transform);
+            organizer.PlayerLoses(index);
+
             enabled = false;
-            Debug.Log("die");
+            //Debug.Log("die");
         }
 
 
@@ -128,7 +139,11 @@ public class AI : MonoBehaviour
     // In the future seperate update and fixed update
     void FixedUpdate()
     {
-        StateMachine.CurrentEnemyState.PhysicsUpdate(); //IMPORTANT       
+        StateMachine.CurrentEnemyState.PhysicsUpdate(); //IMPORTANT
+        if (organizer.StopSignal() == true)
+        {
+            enabled = false;
+        }
     }
     //returns int of the cone
     //first index better for ENTERING CONE
@@ -298,6 +313,7 @@ public class AI : MonoBehaviour
     {
         if (marker.activeSelf == false) //can only place marker when marketSet is false. marker is false only when reached marker
         {
+            //Debug.Log("placingMarker");
             marker.SetActive(true);
             int i = GetConeInt();
             switch (i)
@@ -369,10 +385,15 @@ public class AI : MonoBehaviour
             //Debug.Log("reached");
             marker.SetActive(false);
         }
+
+
         
     }
 
-
+    public bool GetState()
+    {
+        return aliveState;
+    }
 
     /// <summary>
     /// BEYOND LIES DOG SHIT
@@ -459,13 +480,13 @@ public class AI : MonoBehaviour
     }
 
     */
-  
-    
-    
 
 
-        
-    
+
+
+
+
+
 
 
 }
