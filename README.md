@@ -4,7 +4,9 @@ Hello!
   - Visualization of Visual Cones,
   - Implementation of State Machine for Automation: Search, Track, Attack, Idle
   - Simple movement, controls, and Displays.
+
 V0.2: This version was developed for TMU March's Open House Engineering Expo, where we had a lot of students come and play our demo! It was really fun!
+
   - Health and Damage System!
   - Play against another Player, or against AI
   - Controller support! Fixed up the control systems!
