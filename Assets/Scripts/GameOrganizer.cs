@@ -30,6 +30,7 @@ public class GameOrganizer : MonoBehaviour
     bool pleaseStop = false;
     
     [SerializeField] bool PVP; //Set this flag to true for PVP, false for PVE - determines winning check
+    //probably a better way to do this
 
     /*this is getting horrible holy...
     idea is to have a prefab game object script combo i can use for both pve and pvp
@@ -40,27 +41,25 @@ public class GameOrganizer : MonoBehaviour
     holds our pause/restart button aswell?
     */
 
-    public static GameOrganizer instance;
+    public static GameOrganizer instance; //other scripts can access this unique script/object
 
 
     private void Awake()
     {
-        // start of new code
-        if (instance != null)
+        if (instance != null) //makes sure theres no duplicate gameobjects
         {
             Destroy(gameObject);
             return;
         }
-        // end of new code
 
-        instance = this;
-        DontDestroyOnLoad(gameObject);
+        instance = this; //other scripts can access this unique script/object
+        DontDestroyOnLoad(gameObject); //so this object n its script persists
     }
 
     private void OnEnable()
     {
-        Debug.Log("OnEnableCalled");
-        UpdateScores();
+        //Debug.Log("OnEnableCalled");
+        UpdateScores(); //this doesnt really work so I have to call it by other objects
     }
 
     private void Update()
@@ -98,7 +97,7 @@ public class GameOrganizer : MonoBehaviour
 
 
 
-    public void PlayerLoses(int index)
+    public void PlayerLoses(int index) //Accessed by Core scripts to update UI and live count.
     {
         pleaseStop = true;
         switch (index)
@@ -130,10 +129,10 @@ public class GameOrganizer : MonoBehaviour
 
     private void CheckGame(){
 
-        if (playerAIlives == 0 || player1lives == 0 || player2lives == 0) //if a winner can be found, 
+        if (playerAIlives == 0 || player1lives == 0 || player2lives == 0) //if someone has lost, 
         {
             Debug.Log("Winner Found");
-            if (PVP == true) //determine who won
+            if (PVP == true) //determine who won. Have 2 seperate methods whether its pvp or pve. 
             {
                 winner = PVPWinner();
             }

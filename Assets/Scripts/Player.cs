@@ -53,9 +53,8 @@ public class Player : MonoBehaviour
     void Update()
     {
         QuitGame();
-        if (combatSystem.DeathCheck() == true) 
+        if (combatSystem.DeathCheck() == true) //constantly check if this object is dead.
         {
-
             state = false;
             Instantiate(explosion, this.transform);
             enabled = false;
@@ -82,7 +81,7 @@ public class Player : MonoBehaviour
     }
 
 
-    public void SetInputs(Vector2 inputVector)
+    public void SetInputs(Vector2 inputVector) //called by the InputSystem
     {
         inputVectors = inputVector; //passing it into a seperate vector so i can see in on inspection idk
         steerInputs = inputVectors.x;
@@ -103,7 +102,7 @@ public class Player : MonoBehaviour
 
     
 
-    void OnorOff()
+    void OnorOff() //old
     {
         if (Input.GetKeyDown(KeyCode.B))
         {

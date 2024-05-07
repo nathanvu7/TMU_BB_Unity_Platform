@@ -17,34 +17,37 @@ public class PlayerInputHandler : MonoBehaviour
 
     private Vector2 boostVect;
     
-    /*How this works:
-      Each playerInput component (the menu u see on the Player Input object) has an index
-      whenever we press buttons on a controller, the PlayerInputManager will instantiate a Player Input Prefab (the empty object w/ PlayerInput and this script attached)
-      On instantiation, this input handler script will find and attach to each Player Object (the actual bots with physics)m depending on their index.
-     */
-
     /*okay how this currently works:
-     * In the scene, there are 3 PLayerInput objects w this script that corresponds to the 1 keyboard, and 2 Controllers
+     * In the pvp scene, there are 3 PLayerInput objects w this script and PlayerInput input action component that corresponds to the 1 keyboard (index 0), and 2 Controllers (index 1, 2)
+     * Each of these input action component has an index that will be referenced below on Start.
+     * They will match the index of the PlayerInput component to the index of the player bots to pair
      * If you wanna use controllers v controllers, have index be 1 and 2 for the Player bots.
-     * cuz index 0 is being mapped to keyboard
+     * cuz index 0 is being mapped to keyboard, and also automatically mapped to AI.
+     * If you wanna use 1 controller vs 1 keyboard, have index be 0 and 1 for the Player bots.
      * this is fucked i know.
+     * 
      * */
     
     void Start()
     {
-        /*alternative movement system, but since this call the input action directly, u cant seperate different input devices.
-         * playerScript = GetComponent<Player>();
+        /*alternative movement system where a new PlayerInput system is created everytime a new controller is used
+         * , but since this call the input action directly, u cant seperate different input devices (?)
+    
+        playerScript = GetComponent<Player>();
         playerInputs = new PlayerInputs();
         playerInputs.Enable();
-
         if (playerInputs != null) { 
             playerScript.Boost2(playerInputs.Movement.Boost.ReadValue<float>());
         }
         */
-        playerInput = GetComponent<PlayerInput>();
-        var players = FindObjectsOfType<Player>();
-        var index = playerInput.playerIndex;
+        playerInput = GetComponent<PlayerInput>(); //get this playerInput component to access its playerIndex (automatically created)
+        var players = FindObjectsOfType<Player>(); //get Player bots into an array. Each player script has a way to access its index
+        var index = playerInput.playerIndex; //get playerInput index
         playerScript = players.FirstOrDefault(m => m.GetPlayerIndex() == index);
+        /* FirstOrDefault: Returns the first element of the sequence that satisfies a condition or a default value if no such element is found
+         * Condition being that the index of the Player script matches the index of the PlayerInput
+         * If match, instantiate that script privately, so whenever we use playerScript it is directly in reference to a specific bot with a specific index.
+         */
     }
     /*this method is called by the Player Input component on the Player prefab. 
      *Basically used to listen to the Input Action bindings of Event Players
