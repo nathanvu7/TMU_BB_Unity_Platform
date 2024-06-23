@@ -1,36 +1,30 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 //using UnityEditor.Tilemaps;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 
+/*
+ * The core of the Enemy AI, where all components are connected
+ * 
+ */
 public class AI : MonoBehaviour
 {
-    //Us/AI
     [SerializeField] private Rigidbody2D rb;
-    [SerializeField] private float AImoveSpeed;
-    [SerializeField] private float AImoveSpeedSlow;
-    [SerializeField] private float turningSpeed; //7 //Also uysed for tracking
-    [SerializeField] private float slowTrackSpeed;
-    //[SerializeField] float AIturnSpeed;
-
-    [SerializeField] private int stateName;
-
-    //bool isHittingWall = false;
-
-
+    [SerializeField] private int stateName; //shows state int in inspector, and
     //Starting position
     [SerializeField] private GameObject startPosition;
 
     //Target
     [SerializeField] private GameObject targetObj;
-    Vector2 detectionVector;
     [SerializeField] private bool targetLocked;
-    float lockOnSpeed;
-    float lockOnSpeedSlow;
+
+    bool idleBool = false;
+    private Transform pingLocation;
 
     //LockOnCircle
-    [SerializeField] private GameObject lockOnCircle;
+    [SerializeField] private GameObject marker;
     [SerializeField] private GameObject notLockOn;
 
     //CenterTarget
@@ -38,17 +32,32 @@ public class AI : MonoBehaviour
     private float timer;
 
 
-    //Movement 
+    //Movement can chan
     Vector2 engineForceVector;
-    [SerializeField] private float rotationModifier; //10
-    
-    [SerializeField] private float L1turnSpeed; //Speed at which is orients to move to center
+    [SerializeField] private float rotationModifier; //10 keep as is
+    [SerializeField] private float AImoveSpeed; //65 movespeed for Follow and Offensive State 
+    [SerializeField] private float AImoveSpeedSlow; //55 movespeed for Search
+    [SerializeField] private float AIinvestigateSpeed; //55 movespeed when approaching a marker
+    [SerializeField] private float AImoveSpeedCenter; //60 movespeed when returning to centre
+    [SerializeField] private float trackingSpeedFast; //12  turning speed when 
+    [SerializeField] private float L1turnSpeed; //8 Speed at which is orients to move to center
     
     Quaternion q;
     VisionCone visionCone;
     int[] state;
 
-    /*Variables for our state machine
+    //for Health and Damage system
+    [SerializeField] CombatSystem combatSystem;
+    [SerializeField] GameObject explosion;
+
+    //Combat ("Multiplayer")
+    [SerializeField] int index = 0; //unique id for each bot, 0 = ai, 1 = p1, 2 = p2
+    private GameObject organizerObj;
+    private GameOrganizer organizer;
+
+
+    /* "Auto-Implemented Properties"
+     * Properties for our state machine
     These are automatically implemented by C#, 
     Normally, this would be
     public StateMachine StateMachine{
@@ -60,47 +69,68 @@ public class AI : MonoBehaviour
     public FollowTargetState FollowTargetState { get; private set; }
     public OffensiveState OffensiveState { get; private set; }
     public RamAttkState RamAttkState { get; private set; }
-
+    public IdleState IdleState { get; private set; }
+/*
+ * 
+ * 
+ */
     void Awake()
     {
         
         StateMachine = new StateMachine();
-        //Create instance of new State classes
+        //Create instance of new State classes since these are not Mono Behaviors.
+        IdleState = new IdleState(this, StateMachine);
         SearchTargetState = new SearchTargetState(this, StateMachine);
         FollowTargetState = new FollowTargetState(this, StateMachine);  
         OffensiveState = new OffensiveState(this, StateMachine);    
         RamAttkState = new RamAttkState(this, StateMachine);    
+
     }
 
     private void OnEnable()
     {
         //returns to starting position
         this.transform.position = startPosition.transform.position;
+        marker.SetActive(false);
     }
 
     private void Start()
     {
         visionCone = this.GetComponent<VisionCone>();
         StateMachine.Initialize(SearchTargetState); //IMPORTANT
-       
+
+        organizerObj = GameObject.FindWithTag("Organizer");
+        organizer = organizerObj.GetComponent<GameOrganizer>();
+        organizer.UpdateScores(); //idk how to make organizer call this when a scene restarts (not onEnable somehow) so this'll do.
+
+
     }
-
-
 
     private void Update()
     {
 
         StateMachine.CurrentEnemyState.Update(); //IMPORTANT
-        //state = visionCone.GetCone(); //Reads from VisionCone script, updates state to check IsL1, L2, L3, L4
         GetConeInt();
+        if (combatSystem.DeathCheck() == true)
+        {
+            Instantiate(explosion, this.transform);
+            organizer.PlayerLoses(index);
 
-        
+            enabled = false;
+            //Debug.Log("die");
+        }
+
+
     }
 
     // In the future seperate update and fixed update
     void FixedUpdate()
     {
-        StateMachine.CurrentEnemyState.PhysicsUpdate(); //IMPORTANT       
+        StateMachine.CurrentEnemyState.PhysicsUpdate(); //IMPORTANT
+        if (organizer.StopSignal() == true)
+        {
+            enabled = false;
+        }
     }
     //returns int of the cone
     //first index better for ENTERING CONE
@@ -109,6 +139,9 @@ public class AI : MonoBehaviour
 
     //yea its using a duplicate method in VisionCone
     //rmb to combine once done tinkering w Austin
+
+
+
     public int GetConeInt()
     {
         state = visionCone.GetCone();
@@ -131,7 +164,7 @@ public class AI : MonoBehaviour
     }
 
  
-
+    //some gnarly reuse of code below, but since the bot can trigger multiple L's, I cant think of any way to reduce it... then again im kinda ass
     public bool IsL1()
     {
         int l1 = GetConeInt();
@@ -145,12 +178,10 @@ public class AI : MonoBehaviour
             return false;
         }
     }
-
-
     public bool IsL3()
     {
         int l3 = GetConeInt();
-        if (l3 >= 8 && l3 <= 9) //any of L3 sensors triggered
+        if (l3 >= 8 && l3 <= 9) //any of L3+ sensors triggered
         {
             //Debug.Log("Isl3");
             return true;
@@ -160,7 +191,18 @@ public class AI : MonoBehaviour
             return false;
         }
     }
-
+    public bool IsL4()
+    {
+        int l4 = GetConeInt();
+        if (l4 == 9) //L4 sensors triggered
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
     public bool IsL2()
     {
         int l2 = GetConeInt();
@@ -174,25 +216,36 @@ public class AI : MonoBehaviour
             return false;
         }
     }
+    /*Used by other states to jump to idle state
+     * If statement works as a toggle.
+     * 
+     */
+    public bool IsIdle()
+    {
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            idleBool = !idleBool;
+            return idleBool;
+        }
+        return idleBool;
+    }
 
     //Generic track target
-    public void TrackTarget()
+    public void TrackTarget(float trackingSpeed)
     {
         Vector3 vectorToTarget = targetObj.transform.position - transform.position;
         float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg - 90;
         q = Quaternion.AngleAxis(angle, Vector3.forward);
-        transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * turningSpeed);
-
+        transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * trackingSpeed);
     }
 
-    public void TrackTargetSlowly()
+    //Kinda redundant but this is used by the states, which doesnt have the variable for trackingSpeed.
+    public void TrackingTarget()
     {
-        Vector3 vectorToTarget = targetObj.transform.position - transform.position;
-        float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg - 90;
-        q = Quaternion.AngleAxis(angle, Vector3.forward);
-        transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * slowTrackSpeed);
-
+        TrackTarget(trackingSpeedFast);
     }
+
+    
     //Generic move forward function that  inputs a direction
     public void MoveForward()
     {
@@ -206,32 +259,109 @@ public class AI : MonoBehaviour
         rb.AddForce(engineForceVector, ForceMode2D.Impulse);
     }
 
-    public void SetL1TurnSpeed(float s)
-    {
-        slowTrackSpeed = s;
-    }
 
     //At center bot has best view with no dead zones
     //also easier to be the one rotating and tracking rather than
     //moving around
     public void MoveToCenter()
     {
-        timer = 0f;
-        if (timer < 1)
-        {
-            
+        timer = 0f; 
+        if (timer < 3)
+        {        
             timer += Time.deltaTime;
-            Vector3 vectorToTarget = centerObj.transform.position - transform.position;
-            float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg - 90;
-            q = Quaternion.AngleAxis(angle, Vector3.forward);
-            transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * L1turnSpeed);
+            TrackTarget(L1turnSpeed);
         }
         
         float distance = Vector2.Distance(centerObj.transform.position, this.transform.position);
         if (distance >= 2f)
         {
-            rb.AddForce(transform.up * 40, ForceMode2D.Impulse);
+            rb.AddForce(transform.up * AImoveSpeedCenter, ForceMode2D.Impulse);
         }
+    }
+
+
+    /*place where the marker is to investigate in relation to where our bot is.
+    but we don't want to constantly update where this marker is
+    So, update when the marker is reached, or L2 is triggered (state changes)
+    (hopefully L2 quits
+    */
+    public void PlaceMarker() 
+    {
+        if (marker.activeSelf == false) //can only place marker when marketSet is false. marker is false only when reached marker
+        {
+            //Debug.Log("placingMarker");
+            marker.SetActive(true);
+            int i = GetConeInt();
+            switch (i)
+            {
+                case 0: //front
+                    pingLocation = this.gameObject.transform.GetChild(0);
+                    marker.transform.position = pingLocation.transform.position;
+                   
+                    marker.SetActive(true);
+                    break;
+                case 1: //left
+                    pingLocation = this.gameObject.transform.GetChild(1);
+                    marker.transform.position = pingLocation.transform.position;
+
+                    marker.SetActive(true);
+                    break;
+                case 2: //back
+                    pingLocation = this.gameObject.transform.GetChild(2);
+                    marker.transform.position = pingLocation.transform.position;
+
+                    marker.SetActive(true);
+                    break;
+                case 3: //right
+                    pingLocation = this.gameObject.transform.GetChild(3);
+                    marker.transform.position = pingLocation.transform.position;
+
+                    marker.SetActive(true);
+                    break;
+
+            }
+        }      
+    }
+
+    //Generic Getter Setters for Marker state.
+    //Toggles the gameObject Marker state when SearchTargetState jumps to Other
+    public void SetMarker(bool b)
+    {
+        marker.SetActive (b);
+    }
+    public bool GetMarker()
+    {
+        return marker.activeSelf;   
+    }
+
+
+    public void InvestigateMarker()
+    {
+ 
+            timer = 0f;
+            if (timer < 1)
+            {
+
+                timer += Time.deltaTime;
+                Vector3 vectorToTarget = marker.transform.position - transform.position;
+                float angle = Mathf.Atan2(vectorToTarget.y, vectorToTarget.x) * Mathf.Rad2Deg - 90;
+                q = Quaternion.AngleAxis(angle, Vector3.forward);
+                transform.rotation = Quaternion.Slerp(transform.rotation, q, Time.deltaTime * L1turnSpeed);
+            }
+
+            float distance = Vector2.Distance(marker.transform.position, this.transform.position);
+            if (distance >= 5f)
+            {
+                rb.AddForce(transform.up * AIinvestigateSpeed, ForceMode2D.Impulse);
+        }
+        else if(distance < 5f) //when uve reached target
+        {
+            //Debug.Log("reached");
+            marker.SetActive(false);
+        }
+
+
+        
     }
 
     /// <summary>
@@ -264,15 +394,15 @@ public class AI : MonoBehaviour
         yield return new WaitForSeconds(countdownTime);
 
 
-        TrackTarget();
+        TrackingTarget();
         // Code to execute after the countdown
         //SetLock(true);
         //DrawTarget();
     }
 
-    public void SetLock(bool b)
+    public void SetLock(bool idleBool)
     {
-        targetLocked = b;
+        targetLocked = idleBool;
     }
 
     public bool GetLock()
@@ -284,11 +414,11 @@ public class AI : MonoBehaviour
     {
         if (targetLocked == true)
         {
-            lockOnCircle.transform.position = targetObj.transform.position;
+            marker.transform.position = targetObj.transform.position;
         }
         else
         {
-            lockOnCircle.transform.position = notLockOn.transform.position;
+            marker.transform.position = notLockOn.transform.position;
         }
         
     }
@@ -301,10 +431,10 @@ public class AI : MonoBehaviour
     /// <param name="obj"></param>
     public void MoveTo(GameObject obj)
     {
-        timer = 0f;
-        if (timer < 5)
+        x = 0f;
+        if (x < 5)
         {
-            timer += Time.deltaTime;
+            x += Time.deltaTime;
             Turning(obj);
             rb.AddForce(transform.up * 40, ForceMode2D.Impulse);
         }
@@ -319,13 +449,13 @@ public class AI : MonoBehaviour
     }
 
     */
-  
-    
-    
 
 
-        
-    
+
+
+
+
+
 
 
 }

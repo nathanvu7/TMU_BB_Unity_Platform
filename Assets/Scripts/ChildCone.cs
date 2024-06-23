@@ -66,19 +66,11 @@ public class ChildCone : MonoBehaviour
 
     void ToggleRender()
     {
-        if (Input.GetKeyDown(KeyCode.R))
+        if (Input.GetKeyDown(KeyCode.V))
         {
             b = !b;
             toggleOn = !toggleOn;
             this.rend.enabled = b;
         }
     }
-
-    private void ToggleColor()
-    {
-        
-    }
-
-
-
 }

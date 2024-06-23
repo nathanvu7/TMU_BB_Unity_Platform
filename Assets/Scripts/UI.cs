@@ -16,9 +16,9 @@ public class UI : MonoBehaviour
     [SerializeField]
     String[] ConeNameID = new String[9];
     [SerializeField]
-    String[] StateNameID = new String[2];
+    String[] StateNameID = new String[4];
     [SerializeField]
-    String[] StateDescID = new String[2];
+    String[] StateDescID = new String[4];
 
 
 
@@ -111,6 +111,11 @@ public class UI : MonoBehaviour
             case 2:
                 textState.text = StateNameID[2];
                 textStateDesc.text = StateDescID[2];
+                break;
+
+            case 3:
+                textState.text = StateNameID[3];
+                textStateDesc.text = StateDescID[3];
                 break;
         }
     }
